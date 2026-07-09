@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -14,14 +13,14 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Brand mark */}
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex flex-col items-center">
+          <div className="inline-flex flex-col items-center">
             <span className="text-lg font-semibold text-brand-navy">
               Lomond Appraisal Group
             </span>
             <span className="text-xs text-muted-foreground">
               Admin Portal
             </span>
-          </Link>
+          </div>
         </div>
 
         <Card className="shadow-sm">
@@ -39,11 +38,6 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          <Link href="/" className="transition-colors hover:text-foreground">
-            ← Back to public site
-          </Link>
-        </p>
       </div>
     </div>
   );

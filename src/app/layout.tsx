@@ -14,14 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lomond Appraisal Group — Independent Auto Appraisals & Vehicle Valuation",
+    default: "Lomond Appraisal Group — Operations",
     template: "%s — Lomond Appraisal Group",
   },
-  description:
-    "Professional independent vehicle appraisal services including diminished value claims, total loss disputes, classic car appraisals, and pre-purchase inspections.",
+  description: "Internal operations platform for Lomond Appraisal Group.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
   ),
+  // Internal tool — keep it out of search engines
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

@@ -4,9 +4,10 @@
 
 ## Project
 
-Professional vehicle appraisal business platform. Two audiences:
-1. **Public customers** — requesting appraisals via the web
-2. **Admin (owner + staff)** — managing jobs through a full dashboard
+Internal operations platform for a vehicle appraisal business (admin-only —
+the public marketing site + intake form were removed 2026-07; the home page
+redirects to /auth/login). The client portal (/portal/[token]) remains for
+sharing reports/payments with customers.
 
 This is a real production platform. Treat it accordingly: security-first, no fake data, no overbuild.
 
@@ -20,8 +21,9 @@ This is a real production platform. Treat it accordingly: security-first, no fak
 
 ## Route Groups
 
-- `(public)` — header + footer, public visitors
+- `/` — redirects to /auth/login (public site removed)
 - `(admin)` — sidebar + header, protected by middleware
+- `(portal)` — token-based client portal
 - `auth/` — standalone auth pages (no layout)
 
 ## Key Files

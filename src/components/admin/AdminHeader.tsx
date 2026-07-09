@@ -110,10 +110,6 @@ export function AdminHeader({
               <Link href="/admin/settings" className="w-full">Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/" target="_blank" className="w-full">View public site</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
               disabled={isSigningOut}
