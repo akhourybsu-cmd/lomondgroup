@@ -260,7 +260,7 @@ export default async function PortalPage({
   const stripeEnabled = isStripeConfigured();
   const isPaid =
     payment?.status === "paid" || payment?.status === "waived";
-  const amountCents = payment?.amount_cents;
+  const amountCents = payment?.amount_cents ?? null;
   const amountDisplay = fmtCurrency(amountCents);
 
   return (
