@@ -51,7 +51,11 @@ export type ParseOutcome =
   | { ok: true; result: ExtractionResult; rawOutput: string; model: string }
   | { ok: false; error: string };
 
-const NULLABLE_STRING = { anyOf: [{ type: "string" }, { type: "null" }] };
+// NOTE: the structured-outputs API limits schemas to 16 union-typed
+// (nullable/anyOf) parameters. With ~23 optional fields we stay at ZERO
+// unions instead: every field is a plain string and the model writes ""
+// for anything not stated; normalizeExtracted() converts "" back to null.
+const STR = { type: "string", description: "empty string if not stated" };
 
 const EXTRACTION_SCHEMA = {
   type: "object",
@@ -71,41 +75,44 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          contractor_name: NULLABLE_STRING,
-          customer_name: NULLABLE_STRING,
-          customer_phone: NULLABLE_STRING,
-          customer_email: NULLABLE_STRING,
-          address_line_1: NULLABLE_STRING,
-          address_line_2: NULLABLE_STRING,
-          city: NULLABLE_STRING,
-          state: { anyOf: [{ type: "string" }, { type: "null" }], description: "2-letter state code" },
-          zip: NULLABLE_STRING,
+          contractor_name: STR,
+          customer_name: STR,
+          customer_phone: STR,
+          customer_email: STR,
+          address_line_1: STR,
+          address_line_2: STR,
+          city: STR,
+          state: { type: "string", description: "2-letter state code, empty if not stated" },
+          zip: STR,
           appointment_date: {
-            anyOf: [{ type: "string" }, { type: "null" }],
-            description: "YYYY-MM-DD, null if not stated",
+            type: "string",
+            description: "YYYY-MM-DD, empty string if not stated",
           },
           appointment_time: {
-            anyOf: [{ type: "string" }, { type: "null" }],
-            description: "HH:MM 24-hour, null if not stated",
+            type: "string",
+            description: "HH:MM 24-hour, empty string if not stated",
           },
           time_window_start: {
-            anyOf: [{ type: "string" }, { type: "null" }],
-            description: "HH:MM 24-hour window start, if a window is given",
+            type: "string",
+            description: "HH:MM 24-hour window start, empty if no window given",
           },
           time_window_end: {
-            anyOf: [{ type: "string" }, { type: "null" }],
-            description: "HH:MM 24-hour window end, if a window is given",
+            type: "string",
+            description: "HH:MM 24-hour window end, empty if no window given",
           },
-          claim_number: NULLABLE_STRING,
-          reference_number: NULLABLE_STRING,
-          insurance_company: NULLABLE_STRING,
-          vehicle_year: { anyOf: [{ type: "integer" }, { type: "null" }] },
-          vehicle_make: NULLABLE_STRING,
-          vehicle_model: NULLABLE_STRING,
-          vin: NULLABLE_STRING,
-          vehicle_location_notes: NULLABLE_STRING,
-          damage_notes: NULLABLE_STRING,
-          special_instructions: NULLABLE_STRING,
+          claim_number: STR,
+          reference_number: STR,
+          insurance_company: STR,
+          vehicle_year: {
+            type: "string",
+            description: "4-digit year, empty string if not stated",
+          },
+          vehicle_make: STR,
+          vehicle_model: STR,
+          vin: STR,
+          vehicle_location_notes: STR,
+          damage_notes: STR,
+          special_instructions: STR,
           confidence: {
             type: "number",
             description:
@@ -156,7 +163,7 @@ const EXTRACTION_SCHEMA = {
 const SYSTEM_PROMPT = `You extract vehicle appraisal appointment details from contractor assignment documents for a motor vehicle appraisal business.
 
 Rules:
-- Extract only information actually present in the document. Never guess or invent values — use null for anything not stated.
+- Extract only information actually present in the document. Never guess or invent values — use an empty string ("") for anything not stated.
 - Different contractors use different layouts; rely on meaning, not position.
 - A document may contain more than one appointment — return one entry per distinct appointment.
 - Normalize dates to YYYY-MM-DD and times to 24-hour HH:MM. If a date has no year, use the most plausible upcoming year and list the field in missing_or_uncertain_fields.
@@ -165,6 +172,52 @@ Rules:
 - Put damage descriptions in damage_notes and access/scheduling instructions in special_instructions.
 - List every field you could not find, or extracted with low certainty, in missing_or_uncertain_fields.
 - If the document is not an appraisal appointment or assignment at all, set is_appointment_document to false and return an empty appointments array.`;
+
+/**
+ * Wire format: every field is a string, "" meaning "not stated"
+ * (keeps the schema free of union types — see EXTRACTION_SCHEMA note).
+ * This converts the wire shape into the app's nullable shape.
+ */
+function normalizeExtracted(raw: Record<string, unknown>): ExtractedAppointment {
+  const str = (key: string): string | null => {
+    const value = raw[key];
+    return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+  };
+  const yearStr = str("vehicle_year");
+  const year = yearStr ? parseInt(yearStr, 10) : NaN;
+  const confidence = typeof raw.confidence === "number" ? raw.confidence : 0;
+  return {
+    contractor_name: str("contractor_name"),
+    customer_name: str("customer_name"),
+    customer_phone: str("customer_phone"),
+    customer_email: str("customer_email"),
+    address_line_1: str("address_line_1"),
+    address_line_2: str("address_line_2"),
+    city: str("city"),
+    state: str("state"),
+    zip: str("zip"),
+    appointment_date: str("appointment_date"),
+    appointment_time: str("appointment_time"),
+    time_window_start: str("time_window_start"),
+    time_window_end: str("time_window_end"),
+    claim_number: str("claim_number"),
+    reference_number: str("reference_number"),
+    insurance_company: str("insurance_company"),
+    vehicle_year: Number.isFinite(year) && year >= 1900 && year <= 2100 ? year : null,
+    vehicle_make: str("vehicle_make"),
+    vehicle_model: str("vehicle_model"),
+    vin: str("vin"),
+    vehicle_location_notes: str("vehicle_location_notes"),
+    damage_notes: str("damage_notes"),
+    special_instructions: str("special_instructions"),
+    confidence: Math.max(0, Math.min(1, confidence)),
+    missing_or_uncertain_fields: Array.isArray(raw.missing_or_uncertain_fields)
+      ? (raw.missing_or_uncertain_fields as string[]).filter(
+          (f) => typeof f === "string"
+        )
+      : [],
+  };
+}
 
 export async function parseAppointmentsFromText(
   rawText: string
@@ -212,7 +265,16 @@ export async function parseAppointmentsFromText(
       return { ok: false, error: "The AI returned no extraction output." };
     }
 
-    const result = JSON.parse(text) as ExtractionResult;
+    const raw = JSON.parse(text) as {
+      is_appointment_document: boolean;
+      document_summary: string;
+      appointments: Record<string, unknown>[];
+    };
+    const result: ExtractionResult = {
+      is_appointment_document: raw.is_appointment_document,
+      document_summary: raw.document_summary,
+      appointments: (raw.appointments ?? []).map(normalizeExtracted),
+    };
     return { ok: true, result, rawOutput: text, model: EXTRACTION_MODEL };
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {

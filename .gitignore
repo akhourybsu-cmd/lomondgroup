@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local helper (combined migrations for the Supabase SQL editor)
+ALL_MIGRATIONS_PASTE_ME.sql
+
 # vercel
 .vercel
 
