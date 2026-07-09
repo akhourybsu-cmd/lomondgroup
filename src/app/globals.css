@@ -1,0 +1,224 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Lomond Appraisal Group — Brand Design Tokens ─────────────────────────
+   Primary:  Brand Navy  oklch(0.290 0.073 258)  ≈ #1B3A5C
+   Accent:   Brand Gold  oklch(0.730 0.118 77)   ≈ #C9A84C
+   The palette is calm, professional, and insurance-literate.
+   Admin sidebar uses inverted navy background with gold active states.
+─────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* shadcn token bridge */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sidebar tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand tokens — available as Tailwind utilities */
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-dark: var(--brand-navy-dark);
+  --color-brand-navy-light: var(--brand-navy-light);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-light: var(--brand-gold-light);
+  --color-brand-gold-muted: var(--brand-gold-muted);
+
+  /* Status colors */
+  --color-status-new: var(--status-new);
+  --color-status-contacted: var(--status-contacted);
+  --color-status-docs: var(--status-docs);
+  --color-status-scheduled: var(--status-scheduled);
+  --color-status-progress: var(--status-progress);
+  --color-status-drafted: var(--status-drafted);
+  --color-status-sent: var(--status-sent);
+  --color-status-closed: var(--status-closed);
+  --color-status-hold: var(--status-hold);
+  --color-status-canceled: var(--status-canceled);
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Radius scale */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  /* Chart tokens */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+/* ─── Light Mode ───────────────────────────────────────────────────────── */
+:root {
+  /* Core surfaces */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0.007 260);
+
+  /* Card / popover */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.007 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.007 260);
+
+  /* Primary = Brand Navy */
+  --primary: oklch(0.290 0.073 258);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Secondary = Cool light gray */
+  --secondary: oklch(0.968 0.003 247);
+  --secondary-foreground: oklch(0.290 0.073 258);
+
+  /* Muted */
+  --muted: oklch(0.968 0.003 247);
+  --muted-foreground: oklch(0.553 0.022 252);
+
+  /* Accent = Brand Gold */
+  --accent: oklch(0.730 0.118 77);
+  --accent-foreground: oklch(0.145 0.007 260);
+
+  /* Destructive */
+  --destructive: oklch(0.577 0.245 27.325);
+
+  /* Borders & inputs */
+  --border: oklch(0.922 0.006 247);
+  --input: oklch(0.922 0.006 247);
+  --ring: oklch(0.290 0.073 258);
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Brand tokens */
+  --brand-navy: oklch(0.290 0.073 258);
+  --brand-navy-dark: oklch(0.220 0.070 258);
+  --brand-navy-light: oklch(0.380 0.065 258);
+  --brand-gold: oklch(0.730 0.118 77);
+  --brand-gold-light: oklch(0.870 0.075 77);
+  --brand-gold-muted: oklch(0.810 0.060 77);
+
+  /* Job status colors */
+  --status-new: oklch(0.640 0.155 239);
+  --status-contacted: oklch(0.600 0.140 270);
+  --status-docs: oklch(0.750 0.150 70);
+  --status-scheduled: oklch(0.700 0.155 50);
+  --status-progress: oklch(0.580 0.140 225);
+  --status-drafted: oklch(0.620 0.140 295);
+  --status-sent: oklch(0.640 0.120 185);
+  --status-closed: oklch(0.620 0.145 145);
+  --status-hold: oklch(0.650 0.060 60);
+  --status-canceled: oklch(0.550 0.050 0);
+
+  /* Admin sidebar — navy background */
+  --sidebar: oklch(0.290 0.073 258);
+  --sidebar-foreground: oklch(0.920 0.005 247);
+  --sidebar-primary: oklch(0.730 0.118 77);
+  --sidebar-primary-foreground: oklch(0.145 0.007 260);
+  --sidebar-accent: oklch(0.340 0.065 258);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.730 0.118 77);
+
+  /* Chart */
+  --chart-1: oklch(0.290 0.073 258);
+  --chart-2: oklch(0.730 0.118 77);
+  --chart-3: oklch(0.553 0.022 252);
+  --chart-4: oklch(0.620 0.145 145);
+  --chart-5: oklch(0.577 0.245 27.325);
+}
+
+/* ─── Dark Mode (admin-facing, not primary concern) ────────────────────── */
+.dark {
+  --background: oklch(0.170 0.010 258);
+  --foreground: oklch(0.940 0.005 247);
+  --card: oklch(0.210 0.015 258);
+  --card-foreground: oklch(0.940 0.005 247);
+  --popover: oklch(0.210 0.015 258);
+  --popover-foreground: oklch(0.940 0.005 247);
+  --primary: oklch(0.730 0.118 77);
+  --primary-foreground: oklch(0.145 0.007 260);
+  --secondary: oklch(0.250 0.020 258);
+  --secondary-foreground: oklch(0.940 0.005 247);
+  --muted: oklch(0.250 0.020 258);
+  --muted-foreground: oklch(0.640 0.015 250);
+  --accent: oklch(0.730 0.118 77);
+  --accent-foreground: oklch(0.145 0.007 260);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.730 0.118 77);
+  --sidebar: oklch(0.145 0.010 258);
+  --sidebar-foreground: oklch(0.920 0.005 247);
+  --sidebar-primary: oklch(0.730 0.118 77);
+  --sidebar-primary-foreground: oklch(0.145 0.007 260);
+  --sidebar-accent: oklch(0.210 0.015 258);
+  --sidebar-accent-foreground: oklch(0.940 0.005 247);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.730 0.118 77);
+  --chart-1: oklch(0.730 0.118 77);
+  --chart-2: oklch(0.500 0.073 258);
+  --chart-3: oklch(0.640 0.015 250);
+  --chart-4: oklch(0.620 0.145 145);
+  --chart-5: oklch(0.704 0.191 22.216);
+}
+
+/* ─── Base styles ──────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+}
+
+/* ─── Utility classes ──────────────────────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Admin sidebar link active state */
+  .sidebar-link-active {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+    border-left: 2px solid var(--brand-gold);
+  }
+}
