@@ -77,6 +77,7 @@ separate entities.
   - `routing/` — matrix.ts (Routes API computeRouteMatrix), optimize.ts (NN + 2-opt; locked/completed fixed — pure), schedule.ts (ETAs/conflicts — pure), insertion.ts (best-insertion — pure), engine.ts (recomputeRoute: fetch → matrix (cached in daily_routes.matrix_cache) → optimize → schedule → persist)
 - `src/app/actions/ops/` — saveContractor, saveAppointment, updateAppointmentStatus (auto-geocodes on confirm), uploadAssignmentPdfs, processPdfUpload, getPdfSignedUrl, geocodeAppointment, generateRoute, routeStopAction, reoptimizeRoute, routeInsertion (suggest + apply)
 - Pages: /admin/uploads (+[id]), /admin/appointments (+new, [id], [id]/edit), /admin/calendar (+[date]), /admin/routes (+[date]), /admin/contractors (+new, [id]); dashboard has a Field Operations tile row
+- Route page extras: `routing/mapsUrl.ts` (whole-route Google Maps directions URL, 9-waypoint cap) + `/api/route-map/[id]` (server-proxied Static Maps image — key never reaches the browser; requires Maps Static API enabled, verified 2026-07)
 - Components in `src/components/ops/`
 - Base UI gotcha: link-styled buttons use `<Button render={<Link …/>} nativeButton={false}>`, NOT Radix `asChild`
 - Turbopack gotcha: new route directories sometimes 404 until `.next` is deleted and dev restarted

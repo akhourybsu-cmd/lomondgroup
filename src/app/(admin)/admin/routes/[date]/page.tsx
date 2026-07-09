@@ -14,11 +14,13 @@ import {
   formatTimeWindow,
   fullAddress,
 } from "@/lib/ops/format";
+import { buildGoogleMapsRouteUrl } from "@/lib/ops/routing/mapsUrl";
 import {
   AlertTriangle,
   CheckCircle2,
   Clock,
   Lock,
+  Map,
   MapPin,
   Navigation,
   Route,
@@ -54,6 +56,8 @@ type StopRow = {
     state: string | null;
     zip: string | null;
     formatted_address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     time_window_start: string | null;
     time_window_end: string | null;
     estimated_duration_minutes: number;
@@ -133,8 +137,9 @@ export default async function RouteDetailPage({ params }: PageProps) {
          drive_time_from_previous_minutes, miles_from_previous, locked_position,
          completed_at, skipped,
          appointment:appointments(id, customer_name, customer_phone, address_line_1,
-         address_line_2, city, state, zip, formatted_address, time_window_start,
-         time_window_end, estimated_duration_minutes, claim_number, special_instructions)`
+         address_line_2, city, state, zip, formatted_address, latitude, longitude,
+         time_window_start, time_window_end, estimated_duration_minutes,
+         claim_number, special_instructions)`
       )
       .eq("daily_route_id", route.id)
       .order("stop_order"),
@@ -148,6 +153,22 @@ export default async function RouteDetailPage({ params }: PageProps) {
   const stops = (stopData ?? []) as unknown as StopRow[];
   const routedIds = new Set(stops.map((s) => s.appointment.id));
   const unrouted = (unroutedData ?? []).filter((a) => !routedIds.has(a.id));
+
+  // One-click navigation: remaining stops (not completed, not skipped)
+  // in visiting order, starting from home base
+  const remainingPoints = stops
+    .filter(
+      (s) =>
+        !s.completed_at &&
+        !s.skipped &&
+        s.appointment.latitude !== null &&
+        s.appointment.longitude !== null
+    )
+    .map((s) => ({
+      lat: s.appointment.latitude!,
+      lng: s.appointment.longitude!,
+    }));
+  const mapsLink = buildGoogleMapsRouteUrl(route.start_address, remainingPoints);
 
   // Time-window conflict check for display
   const conflicts = stops.filter(
@@ -204,8 +225,47 @@ export default async function RouteDetailPage({ params }: PageProps) {
               </span>
             </div>
           </div>
-          <RecalculateRouteButton routeId={route.id} />
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+            {mapsLink && (
+              <Button
+                render={
+                  <a
+                    href={mapsLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+                nativeButton={false}
+                className="bg-brand-navy text-white hover:bg-brand-navy-dark"
+              >
+                <Map className="mr-1.5 h-4 w-4" />
+                Open Route in Google Maps
+              </Button>
+            )}
+            <RecalculateRouteButton routeId={route.id} />
+          </div>
         </div>
+
+        {mapsLink && mapsLink.truncatedCount > 0 && (
+          <p className="-mt-3 mb-4 text-xs text-amber-700">
+            Google Maps navigation supports 10 stops at a time — the last{" "}
+            {mapsLink.truncatedCount} stop{mapsLink.truncatedCount !== 1 ? "s" : ""}{" "}
+            of the day {mapsLink.truncatedCount !== 1 ? "were" : "was"} left out of
+            the link. Use each stop&apos;s own navigation link for those.
+          </p>
+        )}
+
+        {/* Route map */}
+        <Card className="mb-6 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element -- dynamic
+              authenticated image endpoint; next/image adds nothing here */}
+          <img
+            src={`/api/route-map/${route.id}`}
+            alt={`Map of the ${formatDateOnly(date)} route: start plus ${stops.length} stop${stops.length !== 1 ? "s" : ""}`}
+            className="h-auto w-full"
+            loading="lazy"
+          />
+        </Card>
 
         {conflicts.length > 0 && (
           <Card className="mb-6 border-amber-200 bg-amber-50/60">
