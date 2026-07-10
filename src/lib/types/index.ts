@@ -457,3 +457,7 @@ export const VALID_STATUS_TRANSITIONS: Partial<Record<JobStatus, JobStatus[]>> =
 // ─── Operations module ───────────────────────────────────────────────────────
 
 export * from "./ops";
+
+// ─── Tax / bookkeeping module ────────────────────────────────────────────────
+
+export * from "./tax";

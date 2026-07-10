@@ -14,6 +14,7 @@ import {
   FileText,
   CalendarDays,
   Route,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -51,6 +52,12 @@ const navItems = [
     href: "/admin/contractors",
     label: "Contractors",
     icon: Building2,
+    exact: false,
+  },
+  {
+    href: "/admin/taxes",
+    label: "Taxes",
+    icon: Calculator,
     exact: false,
   },
 ];

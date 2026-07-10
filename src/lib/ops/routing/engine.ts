@@ -192,6 +192,15 @@ export async function recomputeRoute(
     }
   }
 
+  // Return-leg mileage: last non-skipped stop → start (index 0), for
+  // accurate round-trip tax mileage. 0 if there are no active stops.
+  const lastActiveId = [...scheduleInput].reverse().find((s) => !s.skipped)?.id;
+  const returnMeters =
+    lastActiveId !== undefined
+      ? matrix.meters[matrixIndexByAppointment.get(lastActiveId)!][0]
+      : 0;
+  const returnMiles = Math.round((returnMeters / 1609.344) * 10) / 10;
+
   // Persist route totals + matrix cache
   const { error: routeError } = await client
     .from("daily_routes")
@@ -200,6 +209,7 @@ export async function recomputeRoute(
       total_drive_time_minutes: Math.round(schedule.totalDriveMinutes),
       total_appointment_time_minutes: schedule.totalAppointmentMinutes,
       estimated_day_end_time: minutesToTime(schedule.dayEndMinutes),
+      return_to_start_miles: returnMiles,
       optimization_method: options.reoptimize
         ? "nearest_neighbor_2opt"
         : "manual",
