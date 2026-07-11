@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { geocodeAddress } from "@/lib/ops/geocoding/google";
 import { recomputeRoute } from "@/lib/ops/routing/engine";
+import { ROUTABLE_STATUSES } from "@/lib/types";
 import { z } from "zod";
 
 const GenerateRouteSchema = z.object({
@@ -76,7 +77,7 @@ export async function generateRoute(
       "id, customer_name, status, geocoding_status, latitude, longitude, estimated_duration_minutes"
     )
     .eq("appointment_date", route_date)
-    .in("status", ["confirmed", "routed", "in_progress"]);
+    .in("status", ROUTABLE_STATUSES);
 
   const routable = (appointments ?? []).filter(
     (a) => a.geocoding_status === "success" && a.latitude !== null && a.longitude !== null
@@ -88,8 +89,8 @@ export async function generateRoute(
       success: false,
       error:
         (appointments ?? []).length === 0
-          ? "No confirmed appointments on this date. Confirm appointments first."
-          : "No appointments on this date have a verified address yet. Verify their addresses first.",
+          ? "No appointments assigned to this day yet. Assign appointments to the day first."
+          : "No appointments on this day have a verified address yet. Fix their addresses first.",
     };
   }
 
@@ -147,13 +148,15 @@ export async function generateRoute(
     return { success: false, error: computed.error };
   }
 
-  // Mark appointments as routed
+  // Mark scheduled appointments as routed (leave booked/in_progress as-is)
   await supabase
     .from("appointments")
     .update({ status: "routed" })
     .in(
       "id",
-      routable.filter((a) => a.status === "confirmed").map((a) => a.id)
+      routable
+        .filter((a) => a.status === "scheduled" || a.status === "confirmed")
+        .map((a) => a.id)
     );
 
   await supabase.from("audit_logs").insert({

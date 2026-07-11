@@ -11,17 +11,15 @@ import {
 import { updateAppointmentStatus } from "@/app/actions/ops/updateAppointmentStatus";
 
 const ACTION_LABELS: Partial<Record<AppointmentStatus, string>> = {
-  confirmed: "Confirm Appointment",
   in_progress: "Mark In Progress",
   completed: "Mark Completed",
   cancelled: "Cancel Appointment",
   duplicate: "Mark as Duplicate",
-  needs_review: "Reopen for Review",
+  needs_review: "Reopen / Unschedule",
 };
 
 /** Ordering: primary action first, destructive last */
 const ACTION_ORDER: AppointmentStatus[] = [
-  "confirmed",
   "in_progress",
   "completed",
   "needs_review",
@@ -64,9 +62,6 @@ export function AppointmentStatusActions({
   }
 
   function buttonStyle(status: AppointmentStatus): string {
-    if (status === "confirmed") {
-      return "bg-brand-navy text-white hover:bg-brand-navy-dark";
-    }
     if (status === "cancelled") {
       return "border border-destructive/30 bg-background text-destructive hover:bg-destructive/5";
     }

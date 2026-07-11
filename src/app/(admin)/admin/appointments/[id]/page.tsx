@@ -15,6 +15,8 @@ import {
 import { getRoutabilityIssues } from "@/lib/ops/appointments/validation";
 import { findPossibleDuplicates } from "@/lib/ops/appointments/duplicates";
 import { GeocodeButton } from "@/components/ops/GeocodeButton";
+import { AssignToDayControl } from "@/components/ops/AssignToDayControl";
+import { ROUTABLE_STATUSES } from "@/lib/types";
 import {
   formatDateOnly,
   formatTimeOnly,
@@ -103,6 +105,9 @@ export default async function AppointmentDetailPage({ params }: PageProps) {
       : [];
 
   const issues = getRoutabilityIssues(appt);
+  const isScheduled = ROUTABLE_STATUSES.includes(appt.status);
+  const onRoute = ["routed", "booked", "in_progress"].includes(appt.status);
+  const isClosed = ["cancelled", "duplicate", "completed"].includes(appt.status);
   const addressDisplay = fullAddress(appt);
   const geocodingConfig = GEOCODING_STATUS_CONFIG[appt.geocoding_status];
   const vehicleDisplay =
@@ -157,15 +162,38 @@ export default async function AppointmentDetailPage({ params }: PageProps) {
           </Button>
         </div>
 
-        {/* Routability warnings */}
-        {issues.length > 0 &&
-          !["cancelled", "duplicate", "completed"].includes(appt.status) && (
-            <Card className="mb-6 border-amber-200 bg-amber-50/60">
-              <CardContent className="flex gap-3 py-4">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">
-                    Not ready for routing
+        {/* Assign to Day — the route-first scheduling step */}
+        {!isClosed && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                {onRoute
+                  ? "Scheduled"
+                  : isScheduled
+                    ? "Scheduled — ready to route"
+                    : "Assign to a Day"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!isScheduled && (
+                <p className="text-sm text-muted-foreground">
+                  Pick the day you plan to visit. The address is verified now so the
+                  route optimizer can include it — you&apos;ll book the time with the
+                  customer after the route is built.
+                </p>
+              )}
+              <AssignToDayControl
+                appointmentId={appt.id}
+                currentDate={appt.appointment_date}
+                isScheduled={isScheduled}
+                onRoute={onRoute}
+              />
+              {issues.length > 0 ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2.5">
+                  <p className="flex items-center gap-1.5 text-sm font-medium text-amber-800">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    Not ready to route
                   </p>
                   <ul className="mt-1 list-inside list-disc space-y-0.5 text-sm text-amber-700">
                     {issues.map((issue) => (
@@ -173,16 +201,20 @@ export default async function AppointmentDetailPage({ params }: PageProps) {
                     ))}
                   </ul>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        {issues.length === 0 && (
-          <Card className="mb-6 border-green-200 bg-green-50/60">
-            <CardContent className="flex items-center gap-3 py-3">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
-              <p className="text-sm font-medium text-green-800">
-                Ready for routing.
-              </p>
+              ) : (
+                <p className="flex items-center gap-1.5 text-sm font-medium text-green-700">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  Ready to route on {formatDateOnly(appt.appointment_date)}.
+                  {!onRoute && (
+                    <Link
+                      href={`/admin/routes/${appt.appointment_date}`}
+                      className="text-brand-navy underline"
+                    >
+                      Build/open the route →
+                    </Link>
+                  )}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}

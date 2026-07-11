@@ -11,7 +11,12 @@ export function AppointmentStatusBadge({
   status,
   size = "default",
 }: AppointmentStatusBadgeProps) {
-  const config = APPOINTMENT_STATUS_CONFIG[status];
+  const config = APPOINTMENT_STATUS_CONFIG[status] ?? {
+    label: String(status).replace(/_/g, " "),
+    color: "text-slate-700",
+    bgColor: "bg-slate-50 border-slate-200",
+    description: "",
+  };
 
   return (
     <Badge

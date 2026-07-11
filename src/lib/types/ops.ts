@@ -15,14 +15,21 @@ export type UploadProcessingStatus =
   | "failed"
   | "needs_review";
 
+// Route-first workflow:
+//   needs_review → scheduled → routed → booked → in_progress → completed
+// 'scheduled' = assigned to a day + address verified (route-ready, no time).
+// 'booked'    = time set with the customer (after routing).
+// 'confirmed' is a legacy value (pre-2026-07 rows); migrated to 'scheduled'.
 export type AppointmentStatus =
   | "needs_review"
-  | "confirmed"
+  | "scheduled"
   | "routed"
+  | "booked"
   | "in_progress"
   | "completed"
   | "cancelled"
-  | "duplicate";
+  | "duplicate"
+  | "confirmed";
 
 export type AppointmentConfirmationStatus =
   | "unconfirmed"
@@ -206,27 +213,51 @@ export interface DailyRouteDetail extends DailyRoute {
 
 export const ROUTABLE_REQUIREMENTS = [
   "appointment_date",
-  "confirmed_status",
+  "scheduled_status",
   "successful_geocode",
   "estimated_duration",
 ] as const;
 
 // ─── Status workflow ─────────────────────────────────────────────────────────
-// Manual transitions available from the appointment detail page.
-// 'routed' is set/cleared by the route builder, never manually.
+// Plain status flips available as buttons on the appointment page.
+// Three statuses are NOT plain flips (they need extra data / context) and
+// are set by dedicated actions instead:
+//   'scheduled' → Assign to Day (sets date + geocodes)
+//   'routed'    → the route builder
+//   'booked'    → Book (sets the customer's time)
+// See STATUSES_SET_BY_ACTION below.
+
+export const STATUSES_SET_BY_ACTION: AppointmentStatus[] = [
+  "scheduled",
+  "routed",
+  "booked",
+];
 
 export const VALID_APPOINTMENT_TRANSITIONS: Record<
   AppointmentStatus,
   AppointmentStatus[]
 > = {
-  needs_review: ["confirmed", "cancelled", "duplicate"],
-  confirmed: ["in_progress", "completed", "cancelled", "duplicate", "needs_review"],
+  needs_review: ["cancelled", "duplicate"],
+  scheduled: ["needs_review", "cancelled", "duplicate"],
   routed: ["in_progress", "completed", "cancelled"],
+  booked: ["in_progress", "completed", "cancelled"],
   in_progress: ["completed", "cancelled"],
   completed: ["in_progress"],
   cancelled: ["needs_review"],
   duplicate: ["needs_review"],
+  // Legacy: move any old 'confirmed' rows into the new flow
+  confirmed: ["needs_review", "cancelled", "duplicate"],
 };
+
+/** Statuses whose appointments belong in a day's route pool.
+ *  ('confirmed' is included only so legacy rows stay routable.) */
+export const ROUTABLE_STATUSES: AppointmentStatus[] = [
+  "scheduled",
+  "routed",
+  "booked",
+  "in_progress",
+  "confirmed",
+];
 
 export const CONFIRMATION_STATUS_LABELS: Record<
   AppointmentConfirmationStatus,
@@ -246,19 +277,25 @@ export const APPOINTMENT_STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> 
     label: "Needs Review",
     color: "text-amber-700",
     bgColor: "bg-amber-50 border-amber-200",
-    description: "Extracted data awaiting review and confirmation",
+    description: "Details awaiting review — not yet assigned to a day",
   },
-  confirmed: {
-    label: "Confirmed",
+  scheduled: {
+    label: "Scheduled",
     color: "text-green-700",
     bgColor: "bg-green-50 border-green-200",
-    description: "Reviewed and ready for routing",
+    description: "Assigned to a day and address verified — ready to route",
   },
   routed: {
     label: "Routed",
     color: "text-blue-700",
     bgColor: "bg-blue-50 border-blue-200",
-    description: "Assigned to a daily route",
+    description: "Placed on the day's optimized route",
+  },
+  booked: {
+    label: "Booked",
+    color: "text-teal-700",
+    bgColor: "bg-teal-50 border-teal-200",
+    description: "Time confirmed with the customer",
   },
   in_progress: {
     label: "In Progress",
@@ -283,6 +320,13 @@ export const APPOINTMENT_STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> 
     color: "text-slate-500",
     bgColor: "bg-slate-50 border-slate-200",
     description: "Duplicate of another appointment",
+  },
+  // Legacy value (pre-2026-07); shown only if old data still carries it
+  confirmed: {
+    label: "Scheduled",
+    color: "text-green-700",
+    bgColor: "bg-green-50 border-green-200",
+    description: "Legacy status — treated as Scheduled",
   },
 };
 

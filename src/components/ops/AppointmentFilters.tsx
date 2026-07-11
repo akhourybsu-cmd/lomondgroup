@@ -10,8 +10,9 @@ import {
 
 const ALL_STATUSES: AppointmentStatus[] = [
   "needs_review",
-  "confirmed",
+  "scheduled",
   "routed",
+  "booked",
   "in_progress",
   "completed",
   "cancelled",

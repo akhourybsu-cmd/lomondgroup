@@ -18,7 +18,7 @@ interface PageProps {
 interface DaySummary {
   total: number;
   needsReview: number;
-  confirmed: number;
+  scheduled: number;
   routed: boolean;
 }
 
@@ -74,13 +74,13 @@ export default async function CalendarPage({ searchParams }: PageProps) {
       const entry = byDate.get(a.appointment_date) ?? {
         total: 0,
         needsReview: 0,
-        confirmed: 0,
+        scheduled: 0,
         routed: false,
       };
       entry.total++;
       const status = a.status as AppointmentStatus;
       if (status === "needs_review") entry.needsReview++;
-      if (status === "confirmed") entry.confirmed++;
+      if (status === "scheduled") entry.scheduled++;
       byDate.set(a.appointment_date, entry);
     }
     for (const r of routes ?? []) {
@@ -90,7 +90,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
         byDate.set(r.route_date, {
           total: 0,
           needsReview: 0,
-          confirmed: 0,
+          scheduled: 0,
           routed: true,
         });
     }
@@ -191,8 +191,8 @@ export default async function CalendarPage({ searchParams }: PageProps) {
                           {summary.needsReview} to review
                         </p>
                       )}
-                      {summary.confirmed > 0 && (
-                        <p className="text-green-700">{summary.confirmed} confirmed</p>
+                      {summary.scheduled > 0 && (
+                        <p className="text-green-700">{summary.scheduled} scheduled</p>
                       )}
                     </div>
                   )}

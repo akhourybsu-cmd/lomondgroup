@@ -5,6 +5,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { RouteStopControls } from "@/components/ops/RouteStopControls";
 import { RecalculateRouteButton } from "@/components/ops/RouteToolbar";
 import { InsertionPanel } from "@/components/ops/InsertionPanel";
+import { BookStopControl } from "@/components/ops/BookStopControl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -60,9 +61,11 @@ type StopRow = {
     longitude: number | null;
     time_window_start: string | null;
     time_window_end: string | null;
+    appointment_time: string | null;
     estimated_duration_minutes: number;
     claim_number: string | null;
     special_instructions: string | null;
+    status: string;
   };
 };
 
@@ -112,7 +115,7 @@ export default async function RouteDetailPage({ params }: PageProps) {
               <div>
                 <p className="font-medium">No route for {formatDateOnly(date)} yet</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Build one from the day&apos;s confirmed appointments.
+                  Assign appointments to this day, then build the route.
                 </p>
               </div>
               <Button
@@ -138,8 +141,8 @@ export default async function RouteDetailPage({ params }: PageProps) {
          completed_at, skipped,
          appointment:appointments(id, customer_name, customer_phone, address_line_1,
          address_line_2, city, state, zip, formatted_address, latitude, longitude,
-         time_window_start, time_window_end, estimated_duration_minutes,
-         claim_number, special_instructions)`
+         time_window_start, time_window_end, appointment_time,
+         estimated_duration_minutes, claim_number, special_instructions, status)`
       )
       .eq("daily_route_id", route.id)
       .order("stop_order"),
@@ -147,7 +150,7 @@ export default async function RouteDetailPage({ params }: PageProps) {
       .from("appointments")
       .select("id, customer_name, city, state, status, geocoding_status")
       .eq("appointment_date", date)
-      .eq("status", "confirmed"),
+      .eq("status", "scheduled"),
   ]);
 
   const stops = (stopData ?? []) as unknown as StopRow[];
@@ -394,6 +397,14 @@ export default async function RouteDetailPage({ params }: PageProps) {
                           Open in Google Maps ↗
                         </a>
                       )}
+                      {!stop.skipped && !completed && (
+                        <BookStopControl
+                          appointmentId={stop.appointment.id}
+                          booked={stop.appointment.status === "booked"}
+                          bookedTime={stop.appointment.appointment_time}
+                          suggestedTime={stop.estimated_arrival_time}
+                        />
+                      )}
                       <RouteStopControls
                         stopId={stop.id}
                         locked={stop.locked_position}
@@ -415,7 +426,7 @@ export default async function RouteDetailPage({ params }: PageProps) {
           <Card className="mt-8">
             <CardHeader>
               <CardTitle className="text-base">
-                Confirmed appointments not on this route ({unrouted.length})
+                Scheduled for this day, not yet on the route ({unrouted.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

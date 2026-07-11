@@ -47,8 +47,8 @@ export async function suggestInsertion(
     .eq("id", appointmentId)
     .single();
   if (!appt) return { success: false, error: "Appointment not found." };
-  if (appt.status !== "confirmed") {
-    return { success: false, error: "Confirm the appointment before adding it to a route." };
+  if (appt.status !== "scheduled") {
+    return { success: false, error: "Assign the appointment to this day before adding it to the route." };
   }
   if (appt.geocoding_status !== "success" || appt.latitude === null) {
     return { success: false, error: "Verify the appointment's address first." };
@@ -202,7 +202,7 @@ export async function applyInsertion(
     .from("appointments")
     .update({ status: "routed" })
     .eq("id", suggestion.appointment_id)
-    .eq("status", "confirmed");
+    .eq("status", "scheduled");
 
   await supabase
     .from("route_adjustment_suggestions")

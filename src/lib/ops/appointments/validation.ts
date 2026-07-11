@@ -2,12 +2,14 @@
  * Routability validation — the single place that decides whether an
  * appointment may enter route optimization.
  *
- * Required: appointment date, a usable address, a successful geocode,
- * an estimated duration, and status 'confirmed' (or already routed /
- * in progress). Everything else is optional for routing.
+ * Route-first workflow: an appointment is routable once it has a day,
+ * a verified address, and a duration — NO customer booking or time
+ * required. Booking happens after the route is built. The status must
+ * be in the route pool (scheduled / routed / booked / in_progress).
  */
 
 import type { Appointment } from "@/lib/types";
+import { ROUTABLE_STATUSES } from "@/lib/types";
 
 export interface RoutabilityIssue {
   /** Stable key, e.g. "missing_date" */
@@ -15,8 +17,6 @@ export interface RoutabilityIssue {
   /** Plain operational language, shown directly in the UI */
   message: string;
 }
-
-const ROUTABLE_STATUSES = ["confirmed", "routed", "in_progress"] as const;
 
 type RoutabilityInput = Pick<
   Appointment,
@@ -76,11 +76,12 @@ export function getRoutabilityIssues(appt: RoutabilityInput): RoutabilityIssue[]
 
   if (!(ROUTABLE_STATUSES as readonly string[]).includes(appt.status)) {
     issues.push({
-      key: "not_confirmed",
-      message:
-        appt.status === "needs_review"
-          ? "Appointment has not been reviewed and confirmed."
-          : `Appointments with status "${appt.status}" cannot be routed.`,
+      key: "not_scheduled",
+      message: !appt.appointment_date
+        ? "Not assigned to a day yet — use “Assign to Day.”"
+        : appt.status === "needs_review"
+          ? "Reviewed? Use “Assign to Day” to make it route-ready."
+          : `Appointments with status "${appt.status}" are not in the route pool.`,
     });
   }
 

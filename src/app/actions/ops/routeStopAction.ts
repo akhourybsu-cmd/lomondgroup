@@ -106,7 +106,7 @@ export async function routeStopAction(
         .from("appointments")
         .update({ status: "completed" })
         .eq("id", stop.appointment_id)
-        .in("status", ["routed", "in_progress", "confirmed"]);
+        .in("status", ["routed", "booked", "in_progress", "scheduled", "confirmed"]);
     }
     if (action === "uncomplete") {
       await supabase

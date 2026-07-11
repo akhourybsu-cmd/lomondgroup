@@ -63,8 +63,10 @@ export default async function CalendarDayPage({ params }: PageProps) {
 
   const dayAppointments = (appointments ?? []) as unknown as DayAppointment[];
   const hasRoute = (routes ?? []).length > 0;
-  const confirmedCount = dayAppointments.filter((a) =>
-    ["confirmed", "routed", "in_progress", "completed"].includes(a.status)
+  const scheduledCount = dayAppointments.filter((a) =>
+    ["scheduled", "routed", "booked", "in_progress", "completed", "confirmed"].includes(
+      a.status
+    )
   ).length;
 
   return (
@@ -84,7 +86,7 @@ export default async function CalendarDayPage({ params }: PageProps) {
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {dayAppointments.length} appointment
-              {dayAppointments.length !== 1 ? "s" : ""} · {confirmedCount} confirmed
+              {dayAppointments.length !== 1 ? "s" : ""} · {scheduledCount} scheduled
               {hasRoute ? " · route built" : ""}
             </p>
           </div>
@@ -126,7 +128,7 @@ export default async function CalendarDayPage({ params }: PageProps) {
                         {shortLocation(a.city, a.state)}
                         {a.contractor ? ` · ${a.contractor.name}` : ""}
                         {a.geocoding_status !== "success" &&
-                          ["confirmed", "routed"].includes(a.status) &&
+                          ["scheduled", "routed", "booked"].includes(a.status) &&
                           " · address not verified"}
                       </p>
                     </div>

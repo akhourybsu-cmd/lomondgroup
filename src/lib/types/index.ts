@@ -74,6 +74,8 @@ export type AuditEventType =
   | "pdf_processing_failed"
   | "appointment_created"
   | "appointment_updated"
+  | "appointment_scheduled"
+  | "appointment_booked"
   | "appointment_confirmed"
   | "appointment_cancelled"
   | "appointment_marked_duplicate"
